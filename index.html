@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إدارة الأدوية المخدرة - جازان | v4</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- شاشة الدخول -->
+  <div id="auth-screen" class="auth">
+    <div class="auth-card">
+      <div class="row" style="justify-content:center">
+        <img src="logo.png" alt="logo" width="54" height="54" style="border-radius:50%;background:#fff;object-fit:cover" />
+        <div>
+          <div style="font-weight:800">إدارة الأدوية المخدرة — جازان</div>
+          <div class="muted" style="font-size:13px">نسخة 4</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input id="login-email" type="email" placeholder="name@example.com" />
+      </div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input id="login-password" type="password" placeholder="••••••••" />
+      </div>
+
+      <div class="auth-actions">
+        <button id="btn-login" class="btn btn-primary" style="flex:1">دخول</button>
+        <button id="btn-otp" class="btn btn-light">إرسال رابط</button>
+      </div>
+      <div id="login-msg" class="note"></div>
+      <div class="footer-note">© 2025 — SRCA</div>
+    </div>
+  </div>
+
+  <!-- التطبيق -->
+  <header id="app-header" class="appbar" style="display:none">
+    <div class="wrap">
+      <div class="brand">إدارة الأدوية المخدرة — جازان</div>
+      <div class="nav">
+        <button class="chip active" data-tab="dashboard">لوحة التحكم</button>
+        <button class="chip" data-tab="requests">الطلبات</button>
+        <button class="chip" data-tab="reports">التقارير</button>
+        <button class="chip" data-tab="settings">إعدادات</button>
+        <span id="whoami" class="muted" style="margin-inline:10px"></span>
+        <button id="btn-logout" class="logout">تسجيل الخروج</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-main" class="container" style="display:none">
+
+    <!-- لوحة التحكم -->
+    <section id="tab-dashboard" class="tab active">
+      <div class="grid-2">
+        <div class="card">
+          <h3>حالتك</h3>
+          <p>الدور: <b id="profile-role">—</b></p>
+          <p>مركزك الافتراضي: <b id="profile-center">—</b></p>
+        </div>
+        <div class="card">
+          <h3>ملخص سريع</h3>
+          <div id="quick-stats" class="muted">—</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3>رصيد المستودع</h3>
+        <table class="tbl" id="tbl-warehouse">
+          <thead><tr>
+            <th>الصنف</th><th>افتتاحي</th><th>توريد</th><th>مصروف</th><th>رجيع فارغ</th><th>رجيع منتهي</th><th>الرصيد</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="row"><h3 style="margin:0">أرصدة المراكز</h3><select id="center-filter"></select><button id="btn-center-snap" class="btn btn-light">عرض</button></div>
+        <table class="tbl" id="tbl-center-snap">
+          <thead><tr><th>الصنف</th><th>افتتاحي</th><th>استلام</th><th>رجيع</th><th>الرصيد</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- الطلبات -->
+    <section id="tab-requests" class="tab">
+      <div class="grid-2">
+        <div class="card">
+          <h3>إنشاء طلب صرف لمركز</h3>
+          <div class="row">
+            <select id="req-issue-center"></select>
+            <select id="req-issue-item"></select>
+            <input id="req-issue-qty" type="number" min="1" placeholder="الكمية" style="width:120px"/>
+            <input id="req-issue-date" type="date" />
+            <button id="btn-create-issue" class="btn btn-primary">إرسال الطلب</button>
+          </div>
+          <div id="msg-create-issue" class="muted"></div>
+        </div>
+
+        <div class="card">
+          <h3>إنشاء طلب رجيع من مركز</h3>
+          <div class="row">
+            <select id="req-ret-center"></select>
+            <select id="req-ret-item"></select>
+            <input id="req-ret-qty" type="number" min="1" placeholder="الكمية" style="width:120px"/>
+            <select id="req-ret-status"><option value="empty">empty</option><option value="expired">expired</option></select>
+            <input id="req-ret-date" type="date" />
+            <button id="btn-create-return" class="btn btn-primary">إرسال الطلب</button>
+          </div>
+          <div id="msg-create-return" class="muted"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="row"><h3 style="margin:0">طلبات قيد الاعتماد</h3><button id="btn-refresh-requests" class="btn btn-light">تحديث</button></div>
+        <table class="tbl" id="tbl-requests">
+          <thead><tr><th>#</th><th>النوع</th><th>المركز</th><th>الصنف</th><th>كمية</th><th>حالة الرجيع</th><th>تاريخ التنفيذ</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- التقارير -->
+    <section id="tab-reports" class="tab">
+      <div class="card"><h3>التقارير</h3><div class="muted">قريبًا: تصدير PDF/Excel.</div></div>
+    </section>
+
+    <!-- الإعدادات -->
+    <section id="tab-settings" class="tab">
+      <div class="grid-2">
+        <div class="card">
+          <h3>تصفير جميع الكميات</h3>
+          <button id="btn-reset-all" class="btn btn-danger">تصفير الآن</button>
+          <div id="msg-reset-all" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>الرصيد الافتتاحي للمستودع</h3>
+          <div class="row">
+            <select id="whinit-item"></select>
+            <input id="whinit-qty" type="number" min="0" placeholder="الكمية" style="width:140px"/>
+            <button id="btn-whinit-set" class="btn btn-primary">تعيين/تعديل</button>
+          </div>
+          <div id="msg-whinit" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>الرصيد الافتتاحي للمراكز</h3>
+          <div class="row">
+            <select id="centinit-center"></select>
+            <select id="centinit-item"></select>
+            <input id="centinit-qty" type="number" min="0" placeholder="الكمية" style="width:140px"/>
+            <button id="btn-centinit-set" class="btn btn-primary">تعيين/تعديل</button>
+          </div>
+          <div id="msg-centinit" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>إدارة المراكز</h3>
+          <div class="row"><input id="center-new-name" placeholder="اسم مركز جديد"/><button id="btn-center-add" class="btn btn-primary">إضافة</button></div>
+          <table class="tbl" id="tbl-centers-admin"><thead><tr><th>#</th><th>الاسم</th><th>نشط</th><th>إجراءات</th></tr></thead><tbody></tbody></table>
+          <div id="msg-centers-admin" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>إدارة المستخدمين</h3>
+          <table class="tbl" id="tbl-users-admin"><thead><tr><th>المعرف</th><th>الاسم/البريد</th><th>الدور</th><th>المركز الافتراضي</th><th>حفظ</th></tr></thead><tbody></tbody></table>
+          <div id="msg-users-admin" class="muted"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">© 2025 — SRCA</div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
+  </script>
+</body>
+</html>
